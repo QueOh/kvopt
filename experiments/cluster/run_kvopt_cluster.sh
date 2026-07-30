@@ -13,7 +13,7 @@ set -uo pipefail
 cd "$(dirname "$0")"
 source ./cluster_kvopt.env
 
-SSH=(ssh -o StrictHostKeyChecking=no "$DPU_SSH")
+SSH=(ssh -o StrictHostKeyChecking=no -p "$DPU_SSH_PORT" "$DPU_SSH")
 KV_REMOTE="$DPU_REPO/test/kvopt"
 KV_LOCAL="$INIT_REPO/test/kvopt"
 BENCH="$INIT_REPO/build/bin/kvopt_bench"

@@ -2,12 +2,18 @@
 
 Runs the kvopt benchmark (branch `kvopt` of QueOh/spdk: cross-NS Copy,
 fused Copy+Read, Vector Read + `kvopt_bench`) on the EPYC-initiator /
-BlueField-3-DPU cluster, following the vslm_eval conventions of the
-**`cpcs_paper` submodule** (`cpcs_paper/experiments/cpcs/suites/vslm_eval/`:
-`config/cluster.env`, `repro/prepare_cluster.sh`). When the submodule is
-checked out, `cluster_kvopt.env` inherits TRADDR and the seed repo path
-from that inventory; explicit env always wins, and hardcoded fallbacks
-cover a checkout without the submodule.
+BlueField-3-DPU cluster.
+
+**Default setup comes from the cluster inventory**
+`cpcs_paper/experiments/cpcs/inventories/real_cluster.yaml` (the
+`cpcs_paper` submodule; override the file with `INVENTORY=...`).
+`cluster_kvopt.env` reads hosts/SSH, the seed repo paths
+(`hosts.*.repo_path`), the fabric address (`nvmeof.traddr`), the target
+core mask and the rep count (`runtime.*`) from it — via PyYAML when
+available (the cluster initiator has it) or a line-based fallback.
+Explicit env always wins; hardcoded fallbacks cover a checkout without
+the submodule. Only the benchmark *identity* stays kvopt-specific so
+runs never collide with vslm-eval: port 4430, kvopt NQN, own RPC socket.
 
 Everything is namespaced away from the vslm/cpcs work: dedicated repos
 (`~/kvopt/spdk`, `cpcs_paper/spdk` is a read-only seed), port **4430**,

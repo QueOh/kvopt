@@ -70,13 +70,13 @@ echo "================ kvopt CLUSTER PREP ================"
 echo "commit=$COMMIT bundle=$BUNDLE"
 echo "deploying + building on initiator(local) and DPU($DPU_SSH) in parallel..."
 
-scp -o StrictHostKeyChecking=no "$BUNDLE" "$DPU_SSH:/tmp/$BUNDLE_BASENAME" \
+scp -o StrictHostKeyChecking=no -P "$DPU_SSH_PORT" "$BUNDLE" "$DPU_SSH:/tmp/$BUNDLE_BASENAME" \
   || { echo "ERR: scp bundle to DPU failed"; exit 1; }
 
 gen "$INIT_REPO" "$INIT_SEED_REPO" "$BUNDLE" | bash > /tmp/kvopt_prep_init.out 2>&1 &
 P1=$!
 gen "$DPU_REPO" "$DPU_SEED_REPO" "/tmp/$BUNDLE_BASENAME" \
-  | ssh -o StrictHostKeyChecking=no "$DPU_SSH" bash > /tmp/kvopt_prep_dpu.out 2>&1 &
+  | ssh -o StrictHostKeyChecking=no -p "$DPU_SSH_PORT" "$DPU_SSH" bash > /tmp/kvopt_prep_dpu.out 2>&1 &
 P2=$!
 wait $P1; wait $P2
 
