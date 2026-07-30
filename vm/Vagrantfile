@@ -1,0 +1,20 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+# Dedicated build/test VM for the kvopt SPDK benchmark
+# (~/Workspace/kvopt/spdk). Kept minimal on purpose; code is pushed in
+# with rsync over ssh, not vagrant synced folders.
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-22.04"
+  config.vm.box_version = "202510.26.0"
+  config.vm.hostname = "kvopt"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.boot_timeout = 600
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "kvopt-bench"
+    vb.cpus = 4
+    vb.memory = 4096
+  end
+end

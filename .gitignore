@@ -1,0 +1,8 @@
+# Vagrant VM state
+vm/.vagrant/
+
+# git bundles (transfer artifacts, large)
+*.bundle
+
+# fablize task state
+.fablize/

@@ -1,0 +1,2 @@
+kvopt target ready: 127.0.0.1:4430 nqn.2026-07.io.spdk:kvopt-bench
+  sources: ns 1..8 (null), staging: ns 9 (malloc), slm: ns 10 (ok)

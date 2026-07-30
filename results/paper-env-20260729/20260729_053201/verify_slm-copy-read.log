@@ -1,0 +1,23 @@
+EAL: '-c <coremask>' option is deprecated, and will be removed in a future release
+EAL: 	Use '-l <corelist>' or '--lcores=<corelist>' option instead
+[2026-07-29 05:32:05.257196] pci_event.c:  54:spdk_pci_event_listen: *ERROR*: Socket recv buffer is too small (< 1048576), see SO_RCVBUF section in socket(7) man page for specifics on how to adjust the system setting.connected: block_size=4096 chunk=131072 B round=1048576 B mode=slm-copy-read
+verify: wrote pattern to 8 namespaces x 8 chunks
+verify: round 0 OK (8 objects x 131072 bytes)
+verify: round 1 OK (8 objects x 131072 bytes)
+verify: round 2 OK (8 objects x 131072 bytes)
+verify: round 3 OK (8 objects x 131072 bytes)
+verify: round 4 OK (8 objects x 131072 bytes)
+verify: round 5 OK (8 objects x 131072 bytes)
+verify: round 6 OK (8 objects x 131072 bytes)
+verify: round 7 OK (8 objects x 131072 bytes)
+
+=== kvopt_bench: mode=slm-copy-read N=8 C=32 blocks K=8 R=1 Q=1 qd=0 ===
+elapsed:          0.00 s
+requests:         1 (221.9 req/s)
+rounds:           8 (1775.0 rounds/s)
+commands:         16 (16.0 per request)
+payload:          1775.0 MB/s
+round latency us: min=162.6 avg=218.8 p50=169.3 p90=214.7 p99=509.3 max=507.1
+req latency us:   avg=4165.9 p99=4181.3
+errors:           0
+verify: PASS (mode=slm-copy-read)

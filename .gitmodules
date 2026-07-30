@@ -1,0 +1,6 @@
+[submodule "cpcs_paper"]
+	path = cpcs_paper
+	url = ./cpcs_paper
+[submodule "spdk"]
+	path = spdk
+	url = https://github.com/QueOh/spdk.git
