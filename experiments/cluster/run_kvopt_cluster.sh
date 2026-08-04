@@ -20,7 +20,7 @@ KV_LOCAL="$INIT_REPO/test/kvopt"
 BENCH="$INIT_REPO/build/bin/kvopt_bench"
 TRID="trtype:$TRTYPE adrfam:IPv4 traddr:$TRADDR trsvcid:$TRSVCID subnqn:$NQN"
 MODES="partial copy-read slm-copy-read fused vector"
-OUT="$RESULT_ROOT/$(date +%Y%m%d_%H%M%S)"
+OUT="${OUT:-$RESULT_ROOT/$(date +%Y%m%d_%H%M%S)}"
 
 # environment for setup_target.sh on the DPU (sudo env: no -E/sudoers issues)
 tgt_env="TRADDR=$TRADDR TRTYPE=$TRTYPE TRSVCID=$TRSVCID NQN=$NQN RPC_SOCK=$RPC_SOCK"

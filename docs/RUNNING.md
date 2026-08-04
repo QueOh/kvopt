@@ -27,7 +27,7 @@ delta-syncs to `~/kvopt/spdk` and preserves incremental build state.
 |---|---|
 | single Linux host / dev VM | `sudo test/kvopt/verify.sh` then `sudo test/kvopt/run_benchmark.sh --local-target --out out.csv` |
 | paper vagrant split env | `cat experiments/vm-split/smoke_kvopt_target.sh \| vagrant ssh target -c 'cat > /tmp/s.sh && SUITE=quick bash /tmp/s.sh'` (tree at `~/kvopt-spdk`, port 4430) |
-| real cluster (air-gapped) | `experiments/cluster/README.md` — `prepare_kvopt_cluster.sh` once, then `run_kvopt_cluster.sh`; defaults come from `cpcs_paper/.../inventories/real_cluster.yaml` |
+| real cluster (air-gapped) | `experiments/cluster/README.md` — `prepare_kvopt_cluster.sh` once, then `run_kvopt_cluster.sh` (single fabric) or `compare_fabrics.sh` (RDMA + TCP legs, combined table); defaults come from `cpcs_paper/.../inventories/real_cluster.yaml` |
 
 **Always run `verify.sh` (or the runner's verify phase) after any target
 code change** — it checks gathered payloads byte-for-byte against a
