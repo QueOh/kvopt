@@ -2,8 +2,9 @@
 # kvopt gather-scheme benchmark — REAL CLUSTER runner.
 #
 # Run on the INITIATOR (mode: local, per the platform contract). Drives the
-# nvmf target on the DPU over SSH, runs kvopt_bench locally against
-# TCP <TRADDR>:<TRSVCID>, keeps raw results on the initiator (air-gap), and
+# nvmf target on the DPU over SSH, runs kvopt_bench locally over the
+# inventory fabric (<TRTYPE>:<TRADDR>:<TRSVCID>), keeps raw results on the
+# initiator (air-gap), and
 # prints a compact summary to type back.
 #
 #   bash run_kvopt_cluster.sh                       # SUITE=quick (verify + baseline xREPS)
@@ -17,12 +18,12 @@ SSH=(ssh -o StrictHostKeyChecking=no -p "$DPU_SSH_PORT" "$DPU_SSH")
 KV_REMOTE="$DPU_REPO/test/kvopt"
 KV_LOCAL="$INIT_REPO/test/kvopt"
 BENCH="$INIT_REPO/build/bin/kvopt_bench"
-TRID="trtype:TCP adrfam:IPv4 traddr:$TRADDR trsvcid:$TRSVCID subnqn:$NQN"
+TRID="trtype:$TRTYPE adrfam:IPv4 traddr:$TRADDR trsvcid:$TRSVCID subnqn:$NQN"
 MODES="partial copy-read slm-copy-read fused vector"
 OUT="$RESULT_ROOT/$(date +%Y%m%d_%H%M%S)"
 
 # environment for setup_target.sh on the DPU (sudo env: no -E/sudoers issues)
-tgt_env="TRADDR=$TRADDR TRSVCID=$TRSVCID NQN=$NQN RPC_SOCK=$RPC_SOCK"
+tgt_env="TRADDR=$TRADDR TRTYPE=$TRTYPE TRSVCID=$TRSVCID NQN=$NQN RPC_SOCK=$RPC_SOCK"
 tgt_env="$tgt_env CORE_MASK=$TGT_CORE_MASK TGT_MEM_MB=$TGT_MEM_MB"
 tgt_env="$tgt_env PID_FILE=/var/tmp/kvopt_tgt.pid LOG_FILE=/var/tmp/kvopt_tgt.log"
 
@@ -41,7 +42,7 @@ fail=0
 [ -x "$BENCH" ] || { echo "preflight FAIL: $BENCH missing (run prepare)"; fail=1; }
 "${SSH[@]}" "test -x '$DPU_REPO/build/bin/nvmf_tgt'" \
 	|| { echo "preflight FAIL: DPU nvmf_tgt missing (run prepare)"; fail=1; }
-if "${SSH[@]}" "ss -ltn 2>/dev/null | grep -q ':$TRSVCID '"; then
+if [ "$TRTYPE" = TCP ] && "${SSH[@]}" "ss -ltn 2>/dev/null | grep -q ':$TRSVCID '"; then
 	echo "preflight FAIL: port $TRSVCID already listening on the DPU"; fail=1
 fi
 hp=$("${SSH[@]}" "awk '/HugePages_Free/ {print \$2}' /proc/meminfo" 2>/dev/null || echo 0)
@@ -50,7 +51,7 @@ if [ "${hp:-0}" -lt $((TGT_MEM_MB / 2)) ]; then
 fi
 [ "$fail" -eq 0 ] || exit 1
 mkdir -p "$OUT"
-echo "[kvopt] provenance=$PROVENANCE suite=$SUITE results=$OUT"
+echo "[kvopt] provenance=$PROVENANCE suite=$SUITE fabric=$TRTYPE:$TRADDR:$TRSVCID results=$OUT"
 echo "[kvopt] target: $DPU_SSH cores=$TGT_CORE_MASK mem=${TGT_MEM_MB}M -> $TRADDR:$TRSVCID"
 
 # ---------------- phase 1: data verify (malloc sources) ----------------
@@ -78,7 +79,7 @@ done
 
 # ---------------- phase 3 (SUITE=full): sweeps ----------------
 if [ "$SUITE" = full ]; then
-	export TRADDR TRSVCID NQN APP_ARGS
+	export TRADDR TRTYPE TRSVCID NQN APP_ARGS
 	echo "[kvopt] phase 3: chunk sweep (E1)"
 	OUT="$OUT/chunk_sweep.csv" R=2 TIME=$TIME_SEC bash "$KV_LOCAL/sweep_chunk.sh" \
 		> "$OUT/sweep_chunk.log" 2>&1
@@ -92,7 +93,7 @@ fi
 # ---------------- summary (type this back) ----------------
 echo
 echo "================ kvopt SUMMARY — type this back ================"
-echo "provenance=$PROVENANCE fabric=TCP:$TRADDR:$TRSVCID reps=$REPS suite=$SUITE"
+echo "provenance=$PROVENANCE fabric=$TRTYPE:$TRADDR:$TRSVCID reps=$REPS suite=$SUITE"
 echo "workload: N=8 obj x 1MiB, C=128KiB, K=8, R=2, Q=1 (1 request = 8 MiB)"
 awk -F, 'NR>1 && $8>0 { v[$1] = v[$1] " " $9/$8; n[$1]++ }
 	END {

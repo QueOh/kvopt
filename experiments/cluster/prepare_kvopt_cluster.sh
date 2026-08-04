@@ -54,9 +54,16 @@ for sub in dpdk isa-l isa-l-crypto ocf xnvme libvfio-user intel-ipsec-mb; do
   fi
 done
 
-# 4) build (TCP-only benchmark; same hygiene flags as the harness)
-echo "[\$H] ./configure + make -j\$(nproc) (takes several minutes)..."
-if ./configure --without-crypto --disable-tests --without-vfio-user >/tmp/kvopt_prep_cfg.log 2>&1 \
+# 4) RDMA dev headers (the inventory's data path may be RDMA/RoCEv2)
+if [ ! -e /usr/include/infiniband/verbs.h ]; then
+  echo "[\$H] installing RDMA deps..."
+  sudo scripts/pkgdep.sh --rdma >/tmp/kvopt_prep_pkgdep.log 2>&1 \
+    || sudo apt-get install -y libibverbs-dev librdmacm-dev rdma-core >>/tmp/kvopt_prep_pkgdep.log 2>&1 || true
+fi
+
+# 5) build with RDMA (same flags as the harness prepare)
+echo "[\$H] ./configure --with-rdma + make -j\$(nproc) (takes several minutes)..."
+if ./configure --with-rdma --without-crypto --disable-tests --without-vfio-user >/tmp/kvopt_prep_cfg.log 2>&1 \
    && make -j\$(nproc) >/tmp/kvopt_prep_make.log 2>&1; then build=OK; else build=FAIL; fi
 
 tgt=no;   [ -x build/bin/nvmf_tgt ]    && tgt=yes
