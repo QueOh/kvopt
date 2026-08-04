@@ -8,9 +8,9 @@
 #   REPS=3 TIME_SEC=10 bash compare_fabrics.sh
 #   SUITE=full bash compare_fabrics.sh      # adds the sweeps to each leg
 #
-# Leg addresses (override with RDMA_TRADDR / TCP_TRADDR):
-#   RDMA -> nvmeof.traddr from the inventory (the data path)
-#   TCP  -> hosts.target.ssh_host (the mgmt address TCP is known to reach)
+# Both legs use the SAME address — nvmeof.traddr from the inventory (the
+# data-path interface) — so only the protocol changes between legs.
+# Override per leg with RDMA_TRADDR / TCP_TRADDR if ever needed.
 # A failing leg (e.g. the RoCE fabric not establishing) is reported as
 # FAILED and the other leg still runs — that outcome is itself data.
 set -uo pipefail
@@ -20,7 +20,7 @@ source ./cluster_kvopt.env
 STAMP=$(date +%Y%m%d_%H%M%S)
 ROOT="$RESULT_ROOT/fabric_cmp_$STAMP"
 RDMA_TRADDR="${RDMA_TRADDR:-${_INV_TRADDR:-10.10.100.1}}"
-TCP_TRADDR="${TCP_TRADDR:-${_INV_DPU_HOST:-10.1.10.37}}"
+TCP_TRADDR="${TCP_TRADDR:-$RDMA_TRADDR}"
 mkdir -p "$ROOT"
 
 declare -A leg_rc

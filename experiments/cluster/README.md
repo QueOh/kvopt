@@ -54,13 +54,14 @@ host (`nvmf_tgt=yes kvopt_bench=yes build=OK`).
 ```bash
 bash run_kvopt_cluster.sh                # quick: verify + baseline x5 reps (~15 min)
 SUITE=full bash run_kvopt_cluster.sh     # + chunk sweep + saturated QD sweeps (~50 min)
-bash compare_fabrics.sh                  # BOTH fabrics: RDMA (inventory data path) then
-                                         # TCP (mgmt addr), one combined comparison table
+bash compare_fabrics.sh                  # BOTH transports over the data-path addr
+                                         # (RDMA then TCP), one combined comparison table
 ```
 
-`compare_fabrics.sh` runs the full suite once per fabric (RDMA at
-`nvmeof.traddr`, TCP at `hosts.target.ssh_host`; override with
-`RDMA_TRADDR`/`TCP_TRADDR`) and ends with a per-mode median table plus
+`compare_fabrics.sh` runs the full suite once per transport over the
+SAME address (`nvmeof.traddr` — the data-path interface), so only the
+protocol changes between legs (override per leg with
+`RDMA_TRADDR`/`TCP_TRADDR`). It ends with a per-mode median table plus
 the RDMA/TCP ratio. A leg that cannot establish is reported FAILED and
 the other leg still completes.
 
