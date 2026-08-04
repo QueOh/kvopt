@@ -75,6 +75,13 @@ a socket-scoped teardown trap; raw CSVs stay on the initiator under
 Tunables (env or `cluster_kvopt.env`): `TGT_CORE_MASK` (default 0xF),
 `TGT_MEM_MB` (2048), `REPS` (5), `TIME_SEC` (10), `TRSVCID`, `APP_ARGS`.
 
+## Handing this to an agent
+
+`AGENT_RUNBOOK.md` (this directory) is a self-contained mission for a
+cluster-side agent: prerequisites to verify, PASS gates, the fix
+playbook for every known failure signature, and the air-gap typeback
+format. Point the agent at that one file; it needs no other context.
+
 ## Notes
 
 - The workload is protocol-overhead-focused (null sources). Real-SSD
