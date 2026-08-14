@@ -14,10 +14,14 @@
 SPDK_ROOT ?= $(abspath $(CURDIR)/../../../spdk)
 PKGCONF = PKG_CONFIG_PATH=$(SPDK_ROOT)/build/lib/pkgconfig pkg-config
 SPDK_LIBS = spdk_nvme spdk_env_dpdk spdk_util spdk_log spdk_dma
+# SPDK's bundled ISA-L archives (xor_gen etc. used by spdk_util)
+ISAL_LIBS = $(wildcard $(SPDK_ROOT)/isa-l/.libs/libisal.a) \
+	    $(wildcard $(SPDK_ROOT)/isa-l-crypto/.libs/libisal_crypto.a)
 
 CUDA_HOME ?= $(shell dirname $$(dirname $$(command -v nvcc 2>/dev/null)) 2>/dev/null)
 
 CFLAGS ?= -O2 -g -Wall -Wextra
+RPATHS = -Wl,--disable-new-dtags -Wl,-rpath,$(SPDK_ROOT)/dpdk/build/lib -Wl,-rpath,$(SPDK_ROOT)/build/lib
 NVCCFLAGS ?= -O2
 
 .PHONY: all clean check-cuda
@@ -42,7 +46,7 @@ spdk_gpu_read: spdk_gpu_read.c gpu_mem_cuda.o gpu_mem.h
 		-o $@ spdk_gpu_read.c gpu_mem_cuda.o \
 		-Wl,--whole-archive $$($(PKGCONF) --libs $(SPDK_LIBS)) -Wl,--no-whole-archive \
 		$$($(PKGCONF) --libs spdk_syslibs) \
-		-L$(CUDA_HOME)/lib64 -lcuda -lcudart -libverbs -lstdc++
+		-L$(CUDA_HOME)/lib64 -lcuda -lcudart $(ISAL_LIBS) $(RPATHS) -libverbs -lstdc++ -lm -lssl -lcrypto -luuid -lnuma -lfuse3 -ldl -lrt -pthread
 
 spdk_gpu_read_stub: spdk_gpu_read.c gpu_mem_stub.c gpu_mem.h
 	$(CC) $(CFLAGS) \
@@ -50,7 +54,7 @@ spdk_gpu_read_stub: spdk_gpu_read.c gpu_mem_stub.c gpu_mem.h
 		-o $@ spdk_gpu_read.c gpu_mem_stub.c \
 		-Wl,--whole-archive $$($(PKGCONF) --libs $(SPDK_LIBS)) -Wl,--no-whole-archive \
 		$$($(PKGCONF) --libs spdk_syslibs) \
-		-libverbs
+		$(ISAL_LIBS) $(RPATHS) -libverbs -lm -lssl -lcrypto -luuid -lnuma -lfuse3 -ldl -lrt -pthread
 
 clean:
 	rm -f gpu_rdma_memory_test spdk_gpu_read spdk_gpu_read_stub gpu_mem_cuda.o
