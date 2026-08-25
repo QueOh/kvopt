@@ -56,6 +56,36 @@ experiments/gpu-direct/src/spdk_gpu_read -r "$TRID" -n 1 -L 0 -c 256 -J
 experiments/gpu-direct/src/spdk_gpu_read -r "$TRID" -n 1 -L 0 -c 256 -X -J
 ```
 
+## Two-node run (storage server + GPU node)
+
+`setup/` holds the script pair for a real two-machine test:
+`gpu_target.sh` on any Linux server with an RDMA NIC (the JBOF
+stand-in; no GPU needed), `gpu_initiator.sh` on the GPU node
+(e.g. DGX Spark).
+
+```bash
+# storage server  (once per boot: sudo HUGEMEM=2048 spdk/scripts/setup.sh)
+sudo env TRADDR=<server RDMA IP> experiments/gpu-direct/setup/gpu_target.sh
+#   teardown: sudo experiments/gpu-direct/setup/gpu_target.sh --teardown
+
+# GPU node       (once per boot: sudo HUGEMEM=1024 spdk/scripts/setup.sh)
+sudo env TRADDR=<server RDMA IP> experiments/gpu-direct/setup/gpu_initiator.sh
+```
+
+The initiator script runs the whole gate sequence in order — stage-8
+DMA-BUF registration go/no-go, pattern write via host memory (target +
+fabric proof), the direct GPU read, and the mandatory `-X` negative
+test — failing fast at the first broken gate and dropping the JSON
+verdicts under `results/gpu-direct-<timestamp>/`. Defaults: port 4431,
+NQN `nqn.2026-07.io.spdk:kvopt-gpu`, ns 1 = 256 MiB malloc @ 4 KiB
+blocks; everything is env-overridable (see the script headers).
+
+DGX Spark loopback: the same pair works on one box — run both scripts
+on the Spark with the CX7's two ports cabled together and TRADDR = the
+port IP. Caveat: GB10 memory is unified LPDDR5x, so pass gate 3 below
+(host-DRAM counters) is vacuous there; a Spark run verifies the
+software path, the discrete-GPU HBM claim still needs a real GPU node.
+
 ## Pass gates (plan §20 — ALL must hold)
 
 1. READ completes; `checksum_ok:true` from the **in-HBM** kernel.
