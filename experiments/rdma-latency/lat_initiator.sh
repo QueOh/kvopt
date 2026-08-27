@@ -76,7 +76,17 @@ if [[ "${SKIP_NVMF:-0}" != 1 ]]; then
 	nvmf_p50=$(awk '/^ *50\.00000%/  {gsub("us","",$3); print $3; exit}' "$OUT/nvmf_read_qd1.log")
 	nvmf_p99=$(awk '/^ *99\.00000%/  {gsub("us","",$3); print $3; exit}' "$OUT/nvmf_read_qd1.log")
 	nvmf_p999=$(awk '/^ *99\.90000%/ {gsub("us","",$3); print $3; exit}' "$OUT/nvmf_read_qd1.log")
-	[[ -n "$nvmf_avg" ]] || fail "could not parse spdk_nvme_perf output ($OUT/nvmf_read_qd1.log)"
+	if [[ -z "$nvmf_avg" ]]; then
+		echo "--- spdk_nvme_perf stderr (tail) ---" >&2
+		tail -15 "$OUT/nvmf_read_qd1.err" >&2 || true
+		echo "------------------------------------" >&2
+		echo "perf produced no results - almost always a connect failure." >&2
+		echo "Check: target running with matching TRADDR/TRSVCID/NQN; RDMA link" >&2
+		echo "PORT_ACTIVE on both hosts; both ports on the same subnet." >&2
+		echo "Fabric-only check (no perf involved):" >&2
+		echo "  sudo $SPDK_DIR/build/bin/spdk_nvme_discover -r \"trtype:$TRTYPE adrfam:IPv4 traddr:$TRADDR trsvcid:$TRSVCID\"" >&2
+		fail "no results from spdk_nvme_perf (see $OUT/nvmf_read_qd1.err)"
+	fi
 	echo "nvmf_read,$TRTYPE,$SIZE,1,$nvmf_avg,${nvmf_p50:-},${nvmf_p99:-},${nvmf_p999:-},$nvmf_min,$nvmf_max" >> "$csv"
 fi
 
