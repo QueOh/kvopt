@@ -42,7 +42,30 @@ NVMe-oF stack cost over the fabric floor: X.XX us (Y.YYx of raw)
 `SIZE` (both legs), `TIME`/`WARMUP` (leg A), `ITERS` (leg B),
 `WORKLOAD`, `RAW_EXTRA` (e.g. `-d mlx5_1` device pick for perftest),
 `SKIP_RAW=1`/`SKIP_NVMF=1`, `TRTYPE=TCP` (smoke only; raw leg
-auto-skips). Port 4432, NQN `nqn.2026-07.io.spdk:kvopt-lat` - disjoint
+auto-skips).
+
+## Size sweep
+
+```bash
+sudo env TRADDR=<server RDMA IP> TGT_SSH=user@server \
+     experiments/rdma-latency/lat_sweep.sh
+```
+
+Runs both legs at 4 KiB -> 1 MiB (x2 per step; override with
+`SIZES="..."`), merges everything into `sweep.csv` and prints the
+stack tax per size:
+
+```
+    size_B   nvmf_avg_us    raw_avg_us     tax_us    ratio
+      4096         12.10          2.05      10.05     5.90
+      ...
+```
+
+The claim is strongest when `tax_us` stays roughly flat while size
+grows 256x - fixed messaging/software cost, not payload-proportional.
+The target creates its transport with `max_io_size` = 1 MiB for this
+(SPDK default is 128 KiB - a target started from an older checkout
+will fail every size above 131072). Port 4432, NQN `nqn.2026-07.io.spdk:kvopt-lat` - disjoint
 from the bench (4430) and gpu-direct (4431) targets, so all three can
 coexist on one server.
 

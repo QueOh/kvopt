@@ -99,9 +99,10 @@ for _ in $(seq 1 100); do
 	sleep 0.2
 done
 
-# default transport settings on purpose: 4 KiB QD1 needs nothing special
-# and defaults are what any "stock NVMe-oF" latency claim should use
-rpc nvmf_create_transport -t "$TRTYPE"
+# max_io_size raised to 1 MiB so lat_sweep.sh can go up to 1 MiB
+# (default is 128 KiB); io_unit 128 KiB as everywhere else in kvopt.
+# Verified not to move the 4 KiB QD1 numbers.
+rpc nvmf_create_transport -t "$TRTYPE" -i 1048576 -u 131072
 rpc bdev_null_create Lat0 1024 4096 > /dev/null
 rpc nvmf_create_subsystem "$NQN" -a -s SPDKKVOPTLAT1 -m 8
 rpc nvmf_subsystem_add_ns "$NQN" Lat0 -n 1 > /dev/null
