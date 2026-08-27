@@ -100,10 +100,21 @@ else
 		|| fail "ib_write_lat not found; install perftest (apt install perftest) on BOTH hosts"
 	echo "== [B] raw RDMA write, $SIZE B, $ITERS iters (ib_write_lat -R) =="
 	if [[ -n "$TGT_SSH" ]]; then
-		ssh "$TGT_SSH" "ib_write_lat -R -s $SIZE -n $ITERS -F $RAW_EXTRA" \
+		# background ssh cannot answer a password prompt -> BatchMode, and
+		# under sudo use the keys of the invoking user, not of root
+		ssh_cmd=(ssh -o BatchMode=yes)
+		if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != root ]]; then
+			ssh_cmd=(sudo -u "$SUDO_USER" -H ssh -o BatchMode=yes)
+		fi
+		"${ssh_cmd[@]}" "$TGT_SSH" "ib_write_lat -R -s $SIZE -n $ITERS -F $RAW_EXTRA" \
 			> "$OUT/raw_write_lat.server.log" 2>&1 &
 		server_pid=$!
 		sleep 2
+		if ! kill -0 "$server_pid" 2> /dev/null; then
+			echo "--- raw-leg server (ssh) exited early ---" >&2
+			cat "$OUT/raw_write_lat.server.log" >&2 || true
+			fail "ib_write_lat server did not start via ssh. Key auth is required; one-time fix: ssh-copy-id $TGT_SSH (as the invoking user) - or unset TGT_SSH for the manual prompt"
+		fi
 	else
 		echo "start the server on the TARGET host now:"
 		echo "  ib_write_lat -R -s $SIZE -n $ITERS -F $RAW_EXTRA"
