@@ -1,0 +1,9 @@
+series,cores,GBps
+crc_on,2,21.49
+crc_on,4,20.93
+crc_on,8,21.33
+crc_on,16,21.15
+crc_on,24,22.59
+crc_on,48,22.46
+crc_off_peak,,23.9
+line_rate,,25.0
