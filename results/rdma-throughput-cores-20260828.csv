@@ -1,4 +1,5 @@
 series,cores,GBps
+crc_on,1,21.49
 crc_on,2,21.49
 crc_on,4,20.93
 crc_on,8,21.33

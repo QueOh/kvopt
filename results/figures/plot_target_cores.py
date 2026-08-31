@@ -27,7 +27,10 @@ for r in csv.DictReader(open(CSV)):
     elif r["series"] == "line_rate":
         line_rate = float(r["GBps"])
 
-two_core = gbps[cores.index(2)]
+pairs = sorted(zip(cores, gbps))
+cores = [c for c, _ in pairs]
+gbps = [g for _, g in pairs]
+min_cores, min_gbps = pairs[0]
 crc_on_peak = max(gbps)
 crc_cost = (crc_off_peak - crc_on_peak) / crc_off_peak * 100
 
@@ -46,8 +49,9 @@ ax.set_xlabel("target cores")
 ax.set_ylabel("throughput (GB/s)")
 ax.grid(True, which="major", alpha=0.3)
 
-ax.annotate(f"{two_core:.1f} GB/s @ 2 cores\n= {two_core / line_rate * 100:.0f}% of line rate",
-            xy=(2, two_core), xytext=(2.6, 13.5),
+core_word = "core" if min_cores == 1 else "cores"
+ax.annotate(f"{min_gbps:.1f} GB/s @ {min_cores} {core_word}\n= {min_gbps / line_rate * 100:.0f}% of line rate",
+            xy=(min_cores, min_gbps), xytext=(1.6, 13.5),
             arrowprops=dict(arrowstyle="->", color="#1f77b4"), color="#1f77b4")
 ax.text(46, line_rate + 0.45, f"line rate {line_rate:.0f} GB/s (200 GbE)",
         ha="right", color="#555555", fontsize=9)
