@@ -55,9 +55,6 @@ ax.text(0.98, line_rate + 0.35, f"line rate {line_rate:.0f} GB/s (200 GbE)",
         transform=ax.get_yaxis_transform(), ha="right",
         color="#555555", fontsize=9)
 
-ax.annotate("", xy=(1, crc_off), xytext=(1, crc_on),
-            arrowprops=dict(arrowstyle="<->", color="#333333", lw=1.1,
-                            mutation_scale=8, shrinkA=0, shrinkB=0))
 ax.text(0.5, (crc_on + crc_off) / 2 + 0.1,
         f"CRC cost −{crc_cost:.1f}%", ha="center", va="bottom",
         color="#333333", fontsize=9)
