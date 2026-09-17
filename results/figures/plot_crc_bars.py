@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""Bar comparison of NVMe-oF/RDMA throughput with CRC on vs off at 1 target core.
+"""Bar comparison of NVMe-oF/RDMA throughput with CRC on vs off at a given
+target-core count.
 
-CRC-on @ 1 core is measured directly; the CRC-off value in the dataset is the
+Usage: plot_crc_bars.py [cores] [csv]   (defaults: 1 core, the 20260828 CSV)
+
+CRC-on is measured per core count; the CRC-off value in the dataset is the
 recorded peak (core count not logged), so its bar is labeled as such.
 
 Reads results/rdma-throughput-cores-<date>.csv (series,cores,GBps).
@@ -15,26 +18,28 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
-CSV = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE.parent / "rdma-throughput-cores-20260828.csv"
-OUT = HERE / "crc-on-off-1core.png"
+CORES = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+CSV = Path(sys.argv[2]) if len(sys.argv) > 2 else HERE.parent / "rdma-throughput-cores-20260828.csv"
+OUT = HERE / f"crc-on-off-{CORES}core.png"
 
-crc_on_1core = crc_off = line_rate = None
+crc_on = crc_off = line_rate = None
 for r in csv.DictReader(open(CSV)):
-    if r["series"] == "crc_on" and r["cores"] == "1":
-        crc_on_1core = float(r["GBps"])
+    if r["series"] == "crc_on" and r["cores"] == str(CORES):
+        crc_on = float(r["GBps"])
     elif r["series"] == "crc_off_peak":
         crc_off = float(r["GBps"])
     elif r["series"] == "line_rate":
         line_rate = float(r["GBps"])
 
-assert None not in (crc_on_1core, crc_off, line_rate), "missing series in CSV"
-crc_cost = (crc_off - crc_on_1core) / crc_off * 100
+assert None not in (crc_on, crc_off, line_rate), f"missing series or {CORES}-core row in CSV"
+crc_cost = (crc_off - crc_on) / crc_off * 100
+core_word = "core" if CORES == 1 else "cores"
 
 fig, ax = plt.subplots(figsize=(5.8, 4.8))
-ax.set_title("NVMe-oF/RDMA target throughput at 1 core,\nCRC on vs off")
+ax.set_title(f"NVMe-oF/RDMA target throughput at {CORES} {core_word},\nCRC on vs off")
 
-labels = ["CRC on\n(1 core)", "CRC off\n(peak)"]
-values = [crc_on_1core, crc_off]
+labels = [f"CRC on\n({CORES} {core_word})", "CRC off\n(peak)"]
+values = [crc_on, crc_off]
 colors = ["#1f77b4", "#d62728"]
 bars = ax.bar(labels, values, width=0.55, color=colors)
 
@@ -50,9 +55,10 @@ ax.text(0.98, line_rate + 0.35, f"line rate {line_rate:.0f} GB/s (200 GbE)",
         transform=ax.get_yaxis_transform(), ha="right",
         color="#555555", fontsize=9)
 
-ax.annotate("", xy=(1, crc_off - 0.15), xytext=(1, crc_on_1core),
-            arrowprops=dict(arrowstyle="<->", color="#333333", lw=1.1))
-ax.text(0.5, (crc_on_1core + crc_off) / 2 + 0.1,
+ax.annotate("", xy=(1, crc_off), xytext=(1, crc_on),
+            arrowprops=dict(arrowstyle="<->", color="#333333", lw=1.1,
+                            mutation_scale=8, shrinkA=0, shrinkB=0))
+ax.text(0.5, (crc_on + crc_off) / 2 + 0.1,
         f"CRC cost −{crc_cost:.1f}%", ha="center", va="bottom",
         color="#333333", fontsize=9)
 
